@@ -1,32 +1,59 @@
 // MQTT 클라이언트 설정
-var client = new Paho.MQTT.Client("127.0.0.1", 8083, "waterSensorWebClient");  // 고유한 클라이언트 ID로 변경
+var clientId =
+  "waterSensorWebClient_" + Math.random().toString(16).substring(2, 8);
+var client = new Paho.MQTT.Client(
+  "t22e6d86.emqx.cloud",
+  Number(8083),
+  "/mqtt",
+  clientId
+);
 
-client.connect({ onSuccess: onConnect });
-//var client = new Paho.MQTT.Client("127.0.0.1", 8083, "/mqtt", "clientID");
+// 연결 옵션 설정
+var options = {
+  userName: "min",
+  password: "water",
+  onSuccess: onConnect,
+  onFailure: function (e) {
+    console.log("connect fail: " + e.errorMessage);
+  },
+};
+
+// 클라이언트 연결
+client.connect(options);
 
 // 연결 성공 콜백
 function onConnect() {
-    console.log("연결 성공");
-    client.subscribe("water_level/topic1");
-    client.subscribe("water_level/topic2");
-    client.subscribe("water_level/topic3");
+  console.log("connect success");
+  client.subscribe("water_level/topic1");
+  client.subscribe("water_level/topic2");
+  client.subscribe("water_level/topic3");
 }
 
 // 메시지 수신 콜백
 function onMessageArrived(message) {
-    console.log("수신된 메시지:", message.payloadString+"messageTopic => "+message.destinationName);
-    if (message.destinationName === "water_level/topic1") {
-      addChartData(parseFloat(message.payloadString));
-    } else if (message.destinationName === "water_level/topic2") {
-      addChartData1(parseFloat(message.payloadString));
-    } else if (message.destinationName === "water_level/topic3") {
-      addChartData2(parseFloat(message.payloadString));
-    }
+  //현재 시간을 얻어옴
+  const currentTime = new Date();
+  const hours = currentTime.getHours();
+  const minutes = currentTime.getMinutes();
+  const seconds = currentTime.getSeconds();
+  const milliseconds = currentTime.getMilliseconds();
+
+  console.log(
+    // "수신된 메시지:",
+    // message.payloadString + "messageTopic => " + message.destinationName
+    `Message Received (${hours}:${minutes}:${seconds}.${milliseconds}):`,
+    message.payloadString + "messageTopic => " + message.destinationName
+  );
+  if (message.destinationName === "water_level/topic1") {
+    addChartData(parseFloat(message.payloadString));
+  } else if (message.destinationName === "water_level/topic2") {
+    addChartData1(parseFloat(message.payloadString));
+  } else if (message.destinationName === "water_level/topic3") {
+    addChartData2(parseFloat(message.payloadString));
+  }
 }
 
 client.onMessageArrived = onMessageArrived;
-
-
 
 var config = {
   // type은 차트 종류 지정
@@ -38,7 +65,7 @@ var config = {
     // datasets 배열로 이 차트에 그려질 모든 데이터 셋 표현
     datasets: [
       {
-        label: "실시간 수위계 값 1", //초음파 관련 data
+        label: "Real-time water meter values 1", //초음파 관련 data
         backgroundColor: "yellow",
         borderColor: "rgb(89, 186, 184)",
         borderWidth: 2,
@@ -55,13 +82,13 @@ var config = {
       xAxes: [
         {
           display: true,
-          scaleLabel: { display: true, labelString: "시간" },
+          scaleLabel: { display: true, labelString: "time" },
         },
       ],
       yAxes: [
         {
           display: true,
-          scaleLabel: { display: true, labelString: "수위계 값" },
+          scaleLabel: { display: true, labelString: "water level meter value" },
         },
       ],
     },
@@ -74,7 +101,7 @@ var config1 = {
     labels: [],
     datasets: [
       {
-        label: "실시간 수위계 값 2",
+        label: "Real-time water meter values 2",
         backgroundColor: "yellow",
         borderColor: "rgb(189,131,209)",
         borderWidth: 2,
@@ -90,13 +117,13 @@ var config1 = {
       xAxes: [
         {
           display: true,
-          scaleLabel: { display: true, labelString: "시간" },
+          scaleLabel: { display: true, labelString: "time" },
         },
       ],
       yAxes: [
         {
           display: true,
-          scaleLabel: { display: true, labelString: "수위계값" },
+          scaleLabel: { display: true, labelString: "water level meter value" },
         },
       ],
     },
@@ -108,7 +135,7 @@ var config2 = {
     labels: [],
     datasets: [
       {
-        label: "실시간 수위계 값 3",
+        label: "Real-time water meter values 3",
         backgroundColor: "yellow",
         borderColor: "rgb(240,99,132)",
         borderWidth: 2,
@@ -124,13 +151,13 @@ var config2 = {
       xAxes: [
         {
           display: true,
-          scaleLabel: { display: true, labelString: "시간" },
+          scaleLabel: { display: true, labelString: "time" },
         },
       ],
       yAxes: [
         {
           display: true,
-          scaleLabel: { display: true, labelString: "수위계값" },
+          scaleLabel: { display: true, labelString: "water level meter value" },
         },
       ],
     },
